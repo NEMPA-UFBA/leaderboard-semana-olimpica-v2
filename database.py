@@ -93,21 +93,31 @@ def init_db():
             ))
 
         # Regatas e questões (15 regatas: 5 por dia × 3 dias)
+        img_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "assets", "images", "questoes")
         first = True
         for dia, dia_data in REGATAS.items():
             nivel = dia_data["nivel"]
-            for regata_num, enunciados in dia_data["questoes"].items():
+            for regata_num, questoes_list in dia_data["questoes"].items():
                 nome = f"Regata {regata_num} - Dia {dia}"
                 regata = Regata(nome=nome, ativa=first)
                 first = False
                 db.add(regata)
                 db.flush()
 
-                for enunciado in enunciados:
+                for enunciado, img_filename in questoes_list:
+                    img_data = None
+                    if img_filename:
+                        img_path = os.path.join(img_dir, img_filename)
+                        if os.path.exists(img_path):
+                            with open(img_path, "rb") as f:
+                                img_data = f.read()
                     db.add(Questao(
                         regata_id=regata.id,
                         nivel=nivel,
                         enunciado=enunciado,
+                        imagem=img_data,
+                        imagem_filename=img_filename,
                     ))
 
         db.commit()
