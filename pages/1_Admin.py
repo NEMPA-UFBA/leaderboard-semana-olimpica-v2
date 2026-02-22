@@ -1,6 +1,6 @@
 import streamlit as st
 from database import get_db
-from models import User, Equipe, Regata, Questao
+from models import User, Equipe, Regata, Questao, Tentativa
 from auth import login_form, require_auth, hash_password
 
 db = get_db()
@@ -22,8 +22,8 @@ for key in ["form_juiz", "form_equipe", "form_regata", "form_questao"]:
     if key not in st.session_state:
         st.session_state[key] = 0
 
-tab_juizes, tab_equipes, tab_regatas, tab_questoes = st.tabs(
-    ["⚖️ Juizes", "👥 Equipes", "🏁 Regatas", "📝 Questoes"]
+tab_juizes, tab_equipes, tab_regatas, tab_questoes, tab_config = st.tabs(
+    ["⚖️ Juizes", "👥 Equipes", "🏁 Regatas", "📝 Questoes", "🔧 Config"]
 )
 
 # --- JUIZES ---
@@ -274,5 +274,30 @@ with tab_questoes:
                             st.markdown(q.enunciado)
                         if q.imagem:
                             st.image(q.imagem, width=300)
+
+# --- CONFIG ---
+with tab_config:
+    st.markdown("#### Resetar Pontuacao")
+    st.warning("Esta acao remove **todas as tentativas** de todas as equipes. A pontuacao volta a zero.")
+
+    if "confirm_reset" not in st.session_state:
+        st.session_state.confirm_reset = False
+
+    if not st.session_state.confirm_reset:
+        if st.button("Resetar pontuacao das equipes", type="primary"):
+            st.session_state.confirm_reset = True
+            st.rerun()
+    else:
+        st.error("Tem certeza? Essa acao nao pode ser desfeita.")
+        col1, col2 = st.columns(2)
+        if col1.button("Sim, resetar tudo", type="primary"):
+            db.query(Tentativa).delete()
+            db.commit()
+            st.session_state.confirm_reset = False
+            st.success("Pontuacao resetada! Todas as tentativas foram removidas.")
+            st.rerun()
+        if col2.button("Cancelar"):
+            st.session_state.confirm_reset = False
+            st.rerun()
 
 db.close()

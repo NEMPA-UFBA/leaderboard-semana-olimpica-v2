@@ -63,18 +63,54 @@ def init_db():
                 conn.execute(text("ALTER TABLE tentativas_new RENAME TO tentativas"))
                 conn.commit()
 
-    # Create default admin if not exists
+    # Seed: limpar dados e recriar admin, juízes, regatas e questões
+    from seed_data import ADMIN_PASSWORD, JUIZES, REGATAS
+    from models import Tentativa, Questao, Regata, Equipe
+
     db = SessionLocal()
     try:
-        admin = db.query(User).filter_by(username="admin").first()
-        if not admin:
-            admin = User(
-                username="admin",
-                password_hash=hash_password("admin"),
-                role="admin",
-            )
-            db.add(admin)
-            db.commit()
+        # Limpar tudo na ordem correta (FKs)
+        db.query(Tentativa).delete()
+        db.query(Questao).delete()
+        db.query(Regata).delete()
+        db.query(Equipe).delete()
+        db.query(User).delete()
+        db.flush()
+
+        # Admin
+        db.add(User(
+            username="admin",
+            password_hash=hash_password(ADMIN_PASSWORD),
+            role="admin",
+        ))
+
+        # Juízes
+        for username, password in JUIZES:
+            db.add(User(
+                username=username,
+                password_hash=hash_password(password),
+                role="juiz",
+            ))
+
+        # Regatas e questões (15 regatas: 5 por dia × 3 dias)
+        first = True
+        for dia, dia_data in REGATAS.items():
+            nivel = dia_data["nivel"]
+            for regata_num, enunciados in dia_data["questoes"].items():
+                nome = f"Regata {regata_num} - Dia {dia}"
+                regata = Regata(nome=nome, ativa=first)
+                first = False
+                db.add(regata)
+                db.flush()
+
+                for enunciado in enunciados:
+                    db.add(Questao(
+                        regata_id=regata.id,
+                        nivel=nivel,
+                        enunciado=enunciado,
+                    ))
+
+        db.commit()
     finally:
         db.close()
 
