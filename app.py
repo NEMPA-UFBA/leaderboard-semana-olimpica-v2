@@ -79,9 +79,12 @@ st.divider()
 
 # --- LOAD SELECTED PAGE ---
 if st.session_state.current_page == "home":
+    col_l, col_logo, col_r = st.columns([1, 1, 1])
+    with col_logo:
+        st.image("assets/images/semana-olimpica.jpeg", width=250)
     st.markdown(
         """
-        <div style="text-align:center; padding:4rem 1rem;">
+        <div style="text-align:center; padding:1rem 1rem 4rem;">
             <div style="font-family:'Bebas Neue',sans-serif; font-size:4.5rem; letter-spacing:4px; line-height:1;
                         background:linear-gradient(135deg,#f7971e,#ffd200); -webkit-background-clip:text;
                         -webkit-text-fill-color:transparent;">BATALHA OLIMPICA</div>
