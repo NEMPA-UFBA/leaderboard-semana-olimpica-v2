@@ -24,10 +24,6 @@ if not regata:
     time.sleep(5)
     st.rerun()
 
-col_l, col_logo, col_r = st.columns([1, 1, 1])
-with col_logo:
-    st.image("assets/images/semana-olimpica.jpeg", width=200)
-
 # Header
 st.markdown(
     f"""
@@ -55,5 +51,9 @@ else:
             col_l, col_img, col_r = st.columns([1, 2, 1])
             with col_img:
                 st.image(q.imagem, width=300)
+
+col_l, col_logo, col_r = st.columns([1, 1, 1])
+with col_logo:
+    st.image("assets/images/semana-olimpica.jpeg", width=200)
 
 db.close()
