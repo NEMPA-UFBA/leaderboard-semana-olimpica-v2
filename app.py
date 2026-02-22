@@ -109,13 +109,6 @@ if st.session_state.current_page == "home":
                         Desafios da regata ativa</div>
                 </div>
             </div>
-            <div style="margin-top:4rem;">
-                <div style="font-family:'Bebas Neue',sans-serif; font-size:2rem; letter-spacing:3px;
-                            background:linear-gradient(135deg,#f7971e,#ffd200); -webkit-background-clip:text;
-                            -webkit-text-fill-color:transparent;">EQUIPE</div>
-                <div style="font-family:'Outfit',sans-serif; color:#aaa; font-size:0.95rem; margin-top:0.5rem;">
-                    Gabriel Siron · Roberto Sant'anna · Bruno Winicius · Enzo Ribeiro · Iago Nunes · Ikaro Vieira</div>
-            </div>
         </div>
         """,
         unsafe_allow_html=True,
