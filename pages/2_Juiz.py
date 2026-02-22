@@ -2,7 +2,7 @@ import streamlit as st
 from database import get_db
 from models import User, Equipe, Regata, Questao, Tentativa
 from auth import login_form, require_auth
-from scoring import registrar_tentativa, PONTOS_POR_TENTATIVA
+from scoring import registrar_tentativa, excluir_tentativa, PONTOS_POR_TENTATIVA
 
 st.set_page_config(page_title="Juiz - Batalha Olimpica", page_icon="⚖️", layout="wide", initial_sidebar_state="collapsed")
 
@@ -143,36 +143,171 @@ else:
         unsafe_allow_html=True,
     )
 
-    # Action buttons
+    # Hidden Streamlit buttons (triggered by long-press JS below)
     col1, col2 = st.columns(2, gap="large")
+    acertou_clicked = False
+    errou_clicked = False
 
     with col1:
-        if st.button("✅ ACERTOU", use_container_width=True, type="primary"):
-            result = registrar_tentativa(
-                db, equipe_selecionada.id, questao_selecionada.id, True, user["id"]
-            )
-            if "erro" in result:
-                st.error(result["erro"])
-            else:
-                st.success(
-                    f"**{equipe_selecionada.nome}** — {niveis_display.get(questao_selecionada.nivel, '')} — "
-                    f"{result['numero']}a tentativa — **+{result['pontos']} pontos!**"
-                )
-                st.balloons()
+        acertou_clicked = st.button("ACERTOU_HIDDEN", use_container_width=True, key="hidden_acertou")
 
     with col2:
-        if st.button("❌ ERROU", use_container_width=True):
-            result = registrar_tentativa(
-                db, equipe_selecionada.id, questao_selecionada.id, False, user["id"]
+        errou_clicked = st.button("ERROU_HIDDEN", use_container_width=True, key="hidden_errou")
+
+    # Long-press buttons with animation (rendered via components.html for JS support)
+    import streamlit.components.v1 as components
+    components.html(
+        """
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { background:transparent; overflow:hidden; }
+        .hold-btn-container { display:flex; gap:1rem; padding:4px; }
+        .hold-btn {
+            flex:1; position:relative; overflow:hidden; border:none; border-radius:10px;
+            font-family:'Outfit',sans-serif; font-size:1.05rem; font-weight:700;
+            padding:1.1rem 0.8rem; cursor:pointer; user-select:none;
+            -webkit-user-select:none; -webkit-touch-callout:none;
+            transition: transform 0.1s;
+        }
+        .hold-btn:active { transform:scale(0.97); }
+        .hold-btn-acertou {
+            background:linear-gradient(135deg,#2e7d32,#43a047); color:#fff;
+            box-shadow:0 4px 15px rgba(46,125,50,0.4);
+        }
+        .hold-btn-errou {
+            background:linear-gradient(135deg,#c62828,#e53935); color:#fff;
+            box-shadow:0 4px 15px rgba(198,40,40,0.4);
+        }
+        .progress-overlay {
+            position:absolute; top:0; left:0; width:0; height:100%;
+            background:rgba(255,255,255,0.25); pointer-events:none;
+        }
+        .hold-btn.holding .progress-overlay {
+            width:100%; transition:width 1s linear;
+        }
+        .btn-label { position:relative; z-index:1; display:flex; align-items:center;
+                     justify-content:center; gap:8px; }
+        .spinner { display:none; width:18px; height:18px; border:3px solid rgba(255,255,255,0.3);
+                   border-top-color:#fff; border-radius:50%; animation:spin 0.6s linear infinite; }
+        .hold-btn.holding .spinner { display:inline-block; }
+        .hold-btn.done { opacity:0.6; pointer-events:none; }
+        .hold-hint { text-align:center; font-family:'Outfit',sans-serif; color:#888;
+                     font-size:0.78rem; margin-top:6px; letter-spacing:0.3px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        </style>
+
+        <div class="hold-btn-container">
+            <button class="hold-btn hold-btn-acertou" id="btn-acertou">
+                <div class="progress-overlay" id="progress-acertou"></div>
+                <div class="btn-label"><span class="spinner"></span> ✅ ACERTOU</div>
+            </button>
+            <button class="hold-btn hold-btn-errou" id="btn-errou">
+                <div class="progress-overlay" id="progress-errou"></div>
+                <div class="btn-label"><span class="spinner"></span> ❌ ERROU</div>
+            </button>
+        </div>
+        <div class="hold-hint">Segure o botao por 1 segundo para confirmar</div>
+
+        <script>
+        const timers = {};
+
+        function findAndClickHidden(keyword) {
+            const btns = window.parent.document.querySelectorAll('button');
+            for (const b of btns) {
+                if (b.textContent.includes(keyword)) {
+                    b.click();
+                    return;
+                }
+            }
+        }
+
+        function setup(action, keyword) {
+            const btn = document.getElementById('btn-' + action);
+            let timer = null;
+
+            function start(e) {
+                e.preventDefault();
+                if (timer) return;
+                btn.classList.add('holding');
+                timer = setTimeout(() => {
+                    btn.classList.remove('holding');
+                    btn.classList.add('done');
+                    findAndClickHidden(keyword);
+                    timer = null;
+                }, 1000);
+            }
+
+            function end(e) {
+                e.preventDefault();
+                if (!timer) return;
+                clearTimeout(timer);
+                timer = null;
+                btn.classList.remove('holding');
+            }
+
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('mouseup', end);
+            btn.addEventListener('mouseleave', end);
+            btn.addEventListener('touchstart', start, {passive:false});
+            btn.addEventListener('touchend', end, {passive:false});
+            btn.addEventListener('touchcancel', end, {passive:false});
+        }
+
+        // Hide the real Streamlit trigger buttons on load
+        function hideHiddenBtns() {
+            const btns = window.parent.document.querySelectorAll('button');
+            for (const b of btns) {
+                const txt = b.textContent.trim();
+                if (txt === 'ACERTOU_HIDDEN' || txt === 'ERROU_HIDDEN') {
+                    // Hide the nearest stVerticalBlock parent or the button's column container
+                    let container = b.closest('[data-testid="column"]') || b.parentElement;
+                    if (container) {
+                        container.style.height = '0';
+                        container.style.overflow = 'hidden';
+                        container.style.margin = '0';
+                        container.style.padding = '0';
+                    }
+                }
+            }
+        }
+        // Run after a small delay to ensure Streamlit has rendered
+        setTimeout(hideHiddenBtns, 100);
+        setTimeout(hideHiddenBtns, 500);
+
+        setup('acertou', 'ACERTOU_HIDDEN');
+        setup('errou', 'ERROU_HIDDEN');
+        </script>
+        """,
+        height=110,
+    )
+
+    # Process the results
+    if acertou_clicked:
+        result = registrar_tentativa(
+            db, equipe_selecionada.id, questao_selecionada.id, True, user["id"]
+        )
+        if "erro" in result:
+            st.error(result["erro"])
+        else:
+            st.success(
+                f"**{equipe_selecionada.nome}** — {niveis_display.get(questao_selecionada.nivel, '')} — "
+                f"{result['numero']}a tentativa — **+{result['pontos']} pontos!**"
             )
-            if "erro" in result:
-                st.error(result["erro"])
-            else:
-                restantes = 3 - result["numero"]
-                st.warning(
-                    f"**{equipe_selecionada.nome}** — {niveis_display.get(questao_selecionada.nivel, '')} — "
-                    f"Errou tentativa {result['numero']}. Restam {restantes} tentativa(s)."
-                )
+            st.balloons()
+
+    if errou_clicked:
+        result = registrar_tentativa(
+            db, equipe_selecionada.id, questao_selecionada.id, False, user["id"]
+        )
+        if "erro" in result:
+            st.error(result["erro"])
+        else:
+            restantes = 3 - result["numero"]
+            st.warning(
+                f"**{equipe_selecionada.nome}** — {niveis_display.get(questao_selecionada.nivel, '')} — "
+                f"Errou tentativa {result['numero']}. Restam {restantes} tentativa(s)."
+            )
 
 # --- Attempt history & correction ---
 if tentativas_anteriores:
@@ -181,12 +316,12 @@ if tentativas_anteriores:
     for t in tentativas_anteriores:
         with st.container(border=True):
             status_icon = "✅" if t.acertou else "❌"
-            c1, c2 = st.columns([5, 1])
+            c1, c2, c3 = st.columns([5, 1, 1])
             c1.markdown(
                 f"**Tentativa {t.numero}** — {status_icon} {'Acertou' if t.acertou else 'Errou'} — **{t.pontos} pts**"
             )
-            can_correct = (t.juiz_id == user["id"]) or (user["role"] == "admin")
-            if can_correct:
+            can_modify = (t.juiz_id == user["id"]) or (user["role"] == "admin")
+            if can_modify:
                 if c2.button("Corrigir", key=f"corrigir_{t.id}"):
                     t.acertou = not t.acertou
                     if t.acertou:
@@ -194,6 +329,9 @@ if tentativas_anteriores:
                     else:
                         t.pontos = 0
                     db.commit()
+                    st.rerun()
+                if c3.button("Excluir", key=f"excluir_{t.id}", type="primary"):
+                    excluir_tentativa(db, t.id)
                     st.rerun()
 
 db.close()
