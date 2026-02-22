@@ -4,8 +4,6 @@ from models import User, Equipe, Regata, Questao, Tentativa
 from auth import login_form, require_auth
 from scoring import registrar_tentativa, excluir_tentativa, PONTOS_POR_TENTATIVA
 
-st.set_page_config(page_title="Juiz - Batalha Olimpica", page_icon="⚖️", layout="wide", initial_sidebar_state="collapsed")
-
 db = get_db()
 
 if not login_form(db, User):
@@ -16,21 +14,7 @@ if not user:
     st.error("Acesso restrito a juizes.")
     st.stop()
 
-# --- HEADER ---
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;700&display=swap');
-    .juiz-header { font-family:'Bebas Neue',sans-serif; font-size:2.2rem; letter-spacing:2px;
-                   background:linear-gradient(135deg,#f7971e,#ffd200); -webkit-background-clip:text;
-                   -webkit-text-fill-color:transparent; }
-    .juiz-user { font-family:'Outfit',sans-serif; color:#888; font-size:0.9rem; }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-st.markdown(f'<div class="juiz-header">PAINEL DO JUIZ</div>', unsafe_allow_html=True)
-st.markdown(f'<div class="juiz-user">Logado como: {user["username"]}</div>', unsafe_allow_html=True)
+st.markdown(f"Logado como: **{user['username']}**")
 
 if st.sidebar.button("Sair", use_container_width=True):
     del st.session_state["user"]
