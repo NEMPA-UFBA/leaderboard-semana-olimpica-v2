@@ -48,6 +48,8 @@ else:
         if q.enunciado:
             st.markdown(q.enunciado)
         if q.imagem:
-            st.image(q.imagem, use_container_width=True)
+            col_l, col_img, col_r = st.columns([1, 2, 1])
+            with col_img:
+                st.image(q.imagem, width=300)
 
 db.close()
