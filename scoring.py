@@ -62,3 +62,33 @@ def calcular_leaderboard(db: Session) -> list[dict]:
     )
 
     return [{"equipe": nome, "pontos": pontos} for nome, pontos in results]
+
+
+def excluir_tentativa(db: Session, tentativa_id: int) -> None:
+    """Delete an attempt and renumber/recalculate remaining attempts for the same team+question."""
+    tentativa = db.get(Tentativa, tentativa_id)
+    if not tentativa:
+        return
+
+    equipe_id = tentativa.equipe_id
+    questao_id = tentativa.questao_id
+
+    db.delete(tentativa)
+    db.flush()
+
+    # Renumber and recalculate remaining attempts
+    restantes = (
+        db.query(Tentativa)
+        .filter_by(equipe_id=equipe_id, questao_id=questao_id)
+        .order_by(Tentativa.created_at)
+        .all()
+    )
+
+    for i, t in enumerate(restantes, start=1):
+        t.numero = i
+        if t.acertou:
+            t.pontos = PONTOS_POR_TENTATIVA.get(i, 0)
+        else:
+            t.pontos = 0
+
+    db.commit()

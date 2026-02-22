@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database import Base
 from models import User, Equipe, Regata, Questao, Tentativa
-from scoring import registrar_tentativa, calcular_leaderboard
+from scoring import registrar_tentativa, calcular_leaderboard, excluir_tentativa
 
 
 @pytest.fixture
@@ -122,3 +122,91 @@ def test_calcular_leaderboard(db):
     assert ranking[0]["pontos"] == 100
     assert ranking[1]["equipe"] == "Equipe B"
     assert ranking[1]["pontos"] == 80
+
+
+def test_excluir_unica_tentativa(db):
+    equipe = db.query(Equipe).filter_by(nome="Equipe A").first()
+    questao = db.query(Questao).first()
+    juiz = db.query(User).first()
+
+    registrar_tentativa(db, equipe.id, questao.id, False, juiz.id)
+    tentativa = db.query(Tentativa).first()
+
+    excluir_tentativa(db, tentativa.id)
+
+    restantes = db.query(Tentativa).filter_by(equipe_id=equipe.id, questao_id=questao.id).all()
+    assert len(restantes) == 0
+
+
+def test_excluir_primeira_renumera_seguintes(db):
+    equipe = db.query(Equipe).filter_by(nome="Equipe A").first()
+    questao = db.query(Questao).first()
+    juiz = db.query(User).first()
+
+    registrar_tentativa(db, equipe.id, questao.id, False, juiz.id)
+    registrar_tentativa(db, equipe.id, questao.id, False, juiz.id)
+    registrar_tentativa(db, equipe.id, questao.id, True, juiz.id)
+
+    primeira = db.query(Tentativa).filter_by(equipe_id=equipe.id, questao_id=questao.id, numero=1).first()
+    excluir_tentativa(db, primeira.id)
+
+    restantes = (
+        db.query(Tentativa)
+        .filter_by(equipe_id=equipe.id, questao_id=questao.id)
+        .order_by(Tentativa.numero)
+        .all()
+    )
+    assert len(restantes) == 2
+    assert restantes[0].numero == 1
+    assert restantes[0].acertou is False
+    assert restantes[0].pontos == 0
+    assert restantes[1].numero == 2
+    assert restantes[1].acertou is True
+    assert restantes[1].pontos == 80
+
+
+def test_excluir_do_meio_renumera(db):
+    equipe = db.query(Equipe).filter_by(nome="Equipe A").first()
+    questao = db.query(Questao).first()
+    juiz = db.query(User).first()
+
+    registrar_tentativa(db, equipe.id, questao.id, False, juiz.id)
+    registrar_tentativa(db, equipe.id, questao.id, False, juiz.id)
+    registrar_tentativa(db, equipe.id, questao.id, True, juiz.id)
+
+    segunda = db.query(Tentativa).filter_by(equipe_id=equipe.id, questao_id=questao.id, numero=2).first()
+    excluir_tentativa(db, segunda.id)
+
+    restantes = (
+        db.query(Tentativa)
+        .filter_by(equipe_id=equipe.id, questao_id=questao.id)
+        .order_by(Tentativa.numero)
+        .all()
+    )
+    assert len(restantes) == 2
+    assert restantes[0].numero == 1
+    assert restantes[0].acertou is False
+    assert restantes[0].pontos == 0
+    assert restantes[1].numero == 2
+    assert restantes[1].acertou is True
+    assert restantes[1].pontos == 80
+
+
+def test_excluir_afeta_leaderboard(db):
+    equipe_a = db.query(Equipe).filter_by(nome="Equipe A").first()
+    questao = db.query(Questao).first()
+    juiz = db.query(User).first()
+
+    registrar_tentativa(db, equipe_a.id, questao.id, False, juiz.id)
+    registrar_tentativa(db, equipe_a.id, questao.id, True, juiz.id)
+
+    ranking = calcular_leaderboard(db)
+    equipe_a_pts = next(r for r in ranking if r["equipe"] == "Equipe A")
+    assert equipe_a_pts["pontos"] == 80
+
+    primeira = db.query(Tentativa).filter_by(equipe_id=equipe_a.id, questao_id=questao.id, numero=1).first()
+    excluir_tentativa(db, primeira.id)
+
+    ranking = calcular_leaderboard(db)
+    equipe_a_pts = next(r for r in ranking if r["equipe"] == "Equipe A")
+    assert equipe_a_pts["pontos"] == 100
