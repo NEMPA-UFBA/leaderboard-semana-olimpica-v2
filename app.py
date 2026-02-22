@@ -113,9 +113,10 @@ if st.session_state.current_page == "home":
         """,
         unsafe_allow_html=True,
     )
+    st.divider()
     col_l, col_logo, col_r = st.columns([1, 1, 1])
     with col_logo:
-        st.image("assets/images/semana-olimpica.jpeg", width=250)
+        st.image("assets/images/semana-olimpica.jpeg", width=200)
 
 elif st.session_state.current_page == "leaderboard":
     spec = importlib.util.spec_from_file_location("leaderboard_page", "pages/3_Leaderboard.py")
