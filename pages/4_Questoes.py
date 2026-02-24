@@ -43,9 +43,10 @@ questoes = db.query(Questao).filter_by(regata_id=regata.id).all()
 if not questoes:
     st.info("Nenhuma questao cadastrada para esta regata.")
 else:
-    for q in questoes:
+    for i, q in enumerate(questoes, start=1):
         st.divider()
         if q.enunciado:
+            st.markdown(f"**Questão {i}:**")
             st.markdown(q.enunciado)
         if q.imagem:
             col_l, col_img, col_r = st.columns([1, 2, 1])
@@ -55,6 +56,6 @@ else:
 st.divider()
 col_l, col_logo, col_r = st.columns([1, 1, 1])
 with col_logo:
-    st.image("assets/images/semana-olimpica.jpeg", width=200)
+    st.image("assets/images/semana-olimpica.jpeg", width="content")
 
 db.close()
