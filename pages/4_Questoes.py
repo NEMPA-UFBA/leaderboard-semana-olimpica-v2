@@ -20,6 +20,12 @@ if not regata:
         """,
         unsafe_allow_html=True,
     )
+
+    st.divider()
+    col_l, col_logo, col_r = st.columns([1, 1, 1])
+    with col_logo:
+        st.image("assets/images/semana-olimpica.jpeg", width="content")
+
     db.close()
     time.sleep(5)
     st.rerun()
