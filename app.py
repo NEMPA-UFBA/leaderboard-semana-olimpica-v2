@@ -35,7 +35,7 @@ st.markdown(
 
     .nav-title {
         font-family: 'Bebas Neue', sans-serif;
-        font-size: 2rem;
+        font-size: 1.75rem;
         letter-spacing: 2px;
         background: linear-gradient(135deg, #f7971e, #ffd200);
         -webkit-background-clip: text;
@@ -47,7 +47,7 @@ st.markdown(
 )
 
 # --- HEADER WITH NAVIGATION ---
-col_title, col_nav = st.columns([1, 2])
+col_title, col_nav = st.columns([1, 4])
 
 with col_title:
     st.markdown('<div class="nav-title">BATALHA OLIMPICA</div>', unsafe_allow_html=True)
@@ -55,23 +55,23 @@ with col_title:
 with col_nav:
     nav_cols = st.columns([1, 1, 1, 1, 1])
 
-    if nav_cols[0].button("🏠 HOME", use_container_width=True, help="Pagina inicial"):
+    if nav_cols[0].button("🏠 HOME", width="stretch", help="Pagina inicial"):
         st.session_state.current_page = "home"
         st.rerun()
 
-    if nav_cols[1].button("🏆 LEADERBOARD", use_container_width=True, help="Ranking em tempo real"):
+    if nav_cols[1].button("🏆 LEADERBOARD", width="stretch", help="Ranking em tempo real"):
         st.session_state.current_page = "leaderboard"
         st.rerun()
 
-    if nav_cols[2].button("📝 QUESTOES", use_container_width=True, help="Desafios da regata ativa"):
+    if nav_cols[2].button("📝 QUESTOES", width="stretch", help="Desafios da regata ativa"):
         st.session_state.current_page = "questoes"
         st.rerun()
 
-    if nav_cols[3].button("⚙️ ADMIN", use_container_width=True, help="Painel de administrador"):
+    if nav_cols[3].button("⚙️ ADMIN", width="stretch", help="Painel de administrador"):
         st.session_state.current_page = "admin"
         st.rerun()
 
-    if nav_cols[4].button("🔒 JUIZ", use_container_width=True, help="Area de acesso restrito"):
+    if nav_cols[4].button("🔒 JUIZ", width="stretch", help="Area de acesso restrito"):
         st.session_state.current_page = "juiz"
         st.rerun()
 
@@ -81,32 +81,68 @@ st.divider()
 if st.session_state.current_page == "home":
     st.markdown(
         """
+        <style>
+        .home-card {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 2rem 2.5rem;
+            min-width: 200px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .home-card:hover {
+            border-color: #ffd200;
+            transform: translateY(-1rem);
+            box-shadow: 0 8px 24px rgba(255, 210, 0, 0.2);
+        }
+        </style>
         <div style="text-align:center; padding:4rem 1rem;">
-            <div style="font-family:'Bebas Neue',sans-serif; font-size:4.5rem; letter-spacing:4px; line-height:1;
-                        background:linear-gradient(135deg,#f7971e,#ffd200); -webkit-background-clip:text;
-                        -webkit-text-fill-color:transparent;">BATALHA OLIMPICA</div>
-            <div style="font-family:'Outfit',sans-serif; color:#999; font-size:1.1rem; margin-top:0.5rem;
-                        letter-spacing:2px; text-transform:uppercase;">Semana Olimpica 2026</div>
+            <div style="
+                font-family:'Bebas Neue',sans-serif;
+                font-size:4.5rem;
+                letter-spacing:4px;
+                line-height:1;
+                background:linear-gradient(135deg,#f7971e,#ffd200);
+                -webkit-background-clip:text;
+                -webkit-text-fill-color:transparent;
+            ">BATALHA OLIMPICA</div>
+            <div style="
+                font-family:'Outfit',sans-serif;
+                color:#999;
+                font-size:1.1rem;
+                margin-top:0.5rem;
+                letter-spacing:2px;
+                text-transform:uppercase;
+            ">Semana Olimpica 2026</div>
             <div style="margin-top:3rem; display:flex; justify-content:center; gap:2rem; flex-wrap:wrap;">
-                <div style="background:linear-gradient(145deg,#1a1a2e,#16213e); border:1px solid #333;
-                            border-radius:16px; padding:2rem 2.5rem; min-width:200px;
-                            transition:border-color 0.2s, transform 0.2s; cursor:pointer;"
-                     onmouseover="this.style.borderColor='#ffd200'; this.style.transform='translateY(-4px)';"
-                     onmouseout="this.style.borderColor='#333'; this.style.transform='translateY(0)';">
-                    <div style="font-family:'Bebas Neue',sans-serif; font-size:1.8rem; color:#ffd200;
-                                letter-spacing:2px;">LEADERBOARD</div>
-                    <div style="font-family:'Outfit',sans-serif; color:#888; font-size:0.85rem; margin-top:4px;">
-                        Ranking em tempo real</div>
+                <div class="home-card">
+                    <div style="
+                        font-family:'Bebas Neue',sans-serif;
+                        font-size:1.8rem;
+                        color:#ffd200;
+                        letter-spacing:2px;
+                    ">LEADERBOARD</div>
+                    <div style="
+                        font-family:'Outfit',sans-serif;
+                        color:#888;
+                        font-size:0.85rem;
+                        margin-top:4px;
+                    ">Ranking em tempo real</div>
                 </div>
-                <div style="background:linear-gradient(145deg,#1a1a2e,#16213e); border:1px solid #333;
-                            border-radius:16px; padding:2rem 2.5rem; min-width:200px;
-                            transition:border-color 0.2s, transform 0.2s; cursor:pointer;"
-                     onmouseover="this.style.borderColor='#ffd200'; this.style.transform='translateY(-4px)';"
-                     onmouseout="this.style.borderColor='#333'; this.style.transform='translateY(0)';">
-                    <div style="font-family:'Bebas Neue',sans-serif; font-size:1.8rem; color:#ffd200;
-                                letter-spacing:2px;">QUESTOES</div>
-                    <div style="font-family:'Outfit',sans-serif; color:#888; font-size:0.85rem; margin-top:4px;">
-                        Desafios da regata ativa</div>
+                <div class="home-card">
+                    <div style="
+                        font-family:'Bebas Neue',sans-serif;
+                        font-size:1.8rem;
+                        color:#ffd200;
+                        letter-spacing:2px;
+                    ">QUESTOES</div>
+                    <div style="
+                        font-family:'Outfit',sans-serif;
+                        color:#888;
+                        font-size:0.85rem;
+                        margin-top:4px;
+                    ">Desafios da regata ativa</div>
                 </div>
             </div>
         </div>
