@@ -35,7 +35,7 @@ st.markdown(
 
     .nav-title {
         font-family: 'Bebas Neue', sans-serif;
-        font-size: 2rem;
+        font-size: 1.75rem;
         letter-spacing: 2px;
         background: linear-gradient(135deg, #f7971e, #ffd200);
         -webkit-background-clip: text;
@@ -47,7 +47,7 @@ st.markdown(
 )
 
 # --- HEADER WITH NAVIGATION ---
-col_title, col_nav = st.columns([1, 2])
+col_title, col_nav = st.columns([1, 4])
 
 with col_title:
     st.markdown('<div class="nav-title">BATALHA OLIMPICA</div>', unsafe_allow_html=True)
